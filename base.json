@@ -1,0 +1,100 @@
+{
+  "iDproblema": 1,
+  "historico": {
+      "2022": [
+          {
+              "idDisc": 1,
+              "idProfessor": 1
+          },
+          {
+              "idDisc": 2,
+              "idProfessor": 3
+          },
+          {
+              "idDisc": "INF0283",
+              "idProfessor": "Renato Bulcão"
+          },
+          {
+              "idDisc": "INF0291",
+              "idProfessor": "Eliomar Araújo de Lima"
+          },
+          {
+              "idDisc": "INF0294",
+              "idProfessor": "Eliomar Araújo de Lima"
+          },
+          {
+              "idDisc": "INF0056",
+              "idProfessor": "Plínio de Sá Leitão Júnior"
+          }
+      ],
+      "2023": [
+          {
+              "idDisc": 1,
+              "idProfessor": 1
+          },
+          {
+              "idDisc": "INF0018",
+              "idProfessor": "Jacson Rodrigues Barbosa"
+          },
+          {
+              "idDisc": "INF0283",
+              "idProfessor": "Renato Bulcão"
+          },
+          {
+              "idDisc": "INF0291",
+              "idProfessor": "Eliomar Araújo de Lima"
+          },
+          {
+              "idDisc": "INF0294",
+              "idProfessor": "Eliomar Araújo de Lima"
+          },
+          {
+              "idDisc": "INF0056",
+              "idProfessor": "Plínio de Sá Leitão Júnior"
+          }
+      ]
+  },
+  "docente": {
+      "1": {
+          "nome": "Eliomar Araújo de Lima",
+          "nucleoId": "2.1",
+          "dataNucleo": "2015-12-01",
+          "dataInf": "2010-01-01"
+      },
+      "2": {
+          "nome": "maria",
+          "nucleoId": "2.1",
+          "dataNucleo": "1980-05-20",
+          "dataInf": "2005-06-15"
+      },
+      "3": {
+          "nome": "jose",
+          "nucleoId": "2.1",
+          "dataNucleo": "1975-07-30",
+          "dataInf": "2000-08-10"
+      }
+  },
+  "interessesDoDocente": [
+      {
+          "idProfessor": 1,
+          "interresseDisciplina": [
+              1,
+              2
+          ]
+      },
+      {
+          "idProfessor": 2,
+          "interresseDisciplina": [
+              2,
+              3
+          ]
+      }
+  ],
+  "disciplinas": [
+      {
+          "id": 1,
+          "Cód Disc": "INF0287",
+          "nucleoId": "2.1"
+      }
+  ]
+}
