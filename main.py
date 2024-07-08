@@ -1,29 +1,38 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine
 from models import Base
-from repositories import DocenteRepository, DisciplinaRepository, InteresseDocenteRepository, HistoricoRepository
+from repositories import (
+    DocenteRepository,
+    DisciplinaRepository,
+    InteresseDocenteRepository,
+    HistoricoRepository,
+)
 from sqlalchemy import text
 import os
+import requests
 
 # Cria as tabelas no banco de dados, se não existirem
 Base.metadata.create_all(bind=engine)
 
+
 # Função para executar script SQL
 def execute_sql_script(filename, session):
-    with open(filename, 'r') as sql_file:
-        sql_commands = sql_file.read().split(';')
+    with open(filename, "r") as sql_file:
+        sql_commands = sql_file.read().split(";")
         for command in sql_commands:
             if command.strip():
-                sql_statement = text(command.strip() + ';')
+                sql_statement = text(command.strip() + ";")
                 session.execute(sql_statement)
         session.commit()
 
+
 # Caminho para o arquivo SQL de seed
-sql_file_path = os.path.join(os.path.dirname(__file__), 'seed.sql')
+sql_file_path = os.path.join(os.path.dirname(__file__), "seed.sql")
 
 # Criação da aplicação FastAPI
 app = FastAPI()
+
 
 # Dependência para obter a sessão do banco de dados
 def get_db():
@@ -33,9 +42,10 @@ def get_db():
     finally:
         db.close()
 
+
 # Rota /start
 @app.post("/start")
-def start(db: Session = Depends(get_db)):
+async def start(db: Session = Depends(get_db)):
     # Executar script de seed para popular o banco de dados
     execute_sql_script(sql_file_path, db)
 
@@ -46,8 +56,9 @@ def start(db: Session = Depends(get_db)):
     interesses_docente = InteresseDocenteRepository.find_all(db)
 
     # Mapear cod_disc para disciplinas para facilitar a consulta
-    cod_disc_to_disciplina = {disciplina.cod_disc: disciplina.id for disciplina in disciplinas}
-
+    cod_disc_to_disciplina = {
+        disciplina.cod_disc: disciplina.id for disciplina in disciplinas
+    }
 
     # Montar resposta JSON
     historico_dict = {}
@@ -55,38 +66,44 @@ def start(db: Session = Depends(get_db)):
         ano = historico.ano
         if ano not in historico_dict:
             historico_dict[ano] = []
-        historico_dict[ano].append({
-            "idDisc": cod_disc_to_disciplina.get(historico.codDisc),
-            "idProfessor": historico.idProfessor
-        })
+        historico_dict[ano].append(
+            {
+                "idDisc": cod_disc_to_disciplina.get(historico.codDisc),
+                "idProfessor": historico.idProfessor,
+            }
+        )
     docente_dict = {}
     for docente in docentes:
         docente_dict[docente.id] = {
             "nome": docente.nome,
             "nucleoId": docente.nucleoId,
             "dataNucleo": docente.dataNucleo.isoformat(),
-            "dataInf": docente.dataInf.isoformat()
+            "dataInf": docente.dataInf.isoformat(),
         }
 
-# Agrupar interesses do docente por idProfessor
+    # Agrupar interesses do docente por idProfessor
     interesses_do_docente_dict = {}
     for interesse in interesses_docente:
         if interesse.idProfessor not in interesses_do_docente_dict:
             interesses_do_docente_dict[interesse.idProfessor] = {
                 "idProfessor": interesse.idProfessor,
-                "interresseDisciplina": []
+                "interresseDisciplina": [],
             }
-        interesses_do_docente_dict[interesse.idProfessor]["interresseDisciplina"].append(interesse.interesse_disciplina)
+        interesses_do_docente_dict[interesse.idProfessor][
+            "interresseDisciplina"
+        ].append(interesse.interesse_disciplina)
 
     interesses_do_docente_list = list(interesses_do_docente_dict.values())
 
     disciplinas_list = []
     for disciplina in disciplinas:
-        disciplinas_list.append({
-            "id": disciplina.id,
-            "codDisc": disciplina.cod_disc,
-            "nucleoId": disciplina.nucleoId
-        })
+        disciplinas_list.append(
+            {
+                "id": disciplina.id,
+                "codDisc": disciplina.cod_disc,
+                "nucleoId": disciplina.nucleoId,
+            }
+        )
 
     # Limpar o banco de dados após montar a resposta JSON
     db.execute(text("DELETE FROM historicos"))
@@ -101,12 +118,16 @@ def start(db: Session = Depends(get_db)):
         "historico": historico_dict,
         "docente": docente_dict,
         "interessesDoDocente": interesses_do_docente_list,
-        "disciplinas": disciplinas_list
+        "disciplinas": disciplinas_list,
     }
 
-    return response
+    # Enviar a resposta para o endpoint desejado
+    response_solver = requests.post("http://localhost:5000/solve", json=response, timeout=40)
+
+    return response_solver.json()
 
 # Inicialização da aplicação
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
